@@ -951,9 +951,13 @@ p_comp
 # [ADDED] Save the composition plot
 guardar_fig(p_comp, "16_composicion_filo")
 
+# [ADDED] microViz expects raw COUNTS for the CLR transformation, not percentages. To keep the same ASVs as
+# psd4r.filtrado (the abundance filter of section 15.1), keep those ASVs in the count object psd4
+psd4_clr <- prune_taxa(taxa_names(psd4r.filtrado), psd4)
+
 # [CHANGED] Aggregate to Class, apply the centred log-ratio (CLR) transformation and draw a heatmap; keep the object
-hm_clr <- psd4r.filtrado %>%
-  tax_transform("clr", rank = "Class") %>%                                # CLR transformation at Class level
+hm_clr <- psd4_clr %>%
+  tax_transform("clr", rank = "Class", zero_replace = "halfmin") %>%      # CLR at Class level; zeros replaced by half the smallest non-zero count of each taxon (CLR needs log of non-zero values)
   comp_heatmap(colors = heat_palette(sym = TRUE), name = "CLR")           # symmetric colour palette, legend titled "CLR"
 
 # Display the heatmap
