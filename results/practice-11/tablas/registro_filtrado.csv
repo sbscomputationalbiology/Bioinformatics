@@ -5,3 +5,9 @@
 "Mean-abundance filter (> 1e-5)",252,19
 "Prevalence filter (> 2 reads in > 5 % of samples)",238,19
 "Removal of samples with <= 1000 reads",238,19
+"Phyloseq object (all ASVs)",256,19
+"Removal of rare and unassigned phyla",255,19
+"Removal of chloroplast, mitochondria and eukaryotes",252,19
+"Mean-abundance filter (> 1e-5)",252,19
+"Prevalence filter (> 2 reads in > 5 % of samples)",238,19
+"Removal of samples with <= 1000 reads",238,19

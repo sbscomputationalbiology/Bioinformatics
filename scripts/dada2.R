@@ -449,10 +449,19 @@ saveRDS(fitGTR, file.path(dir_objetos, "fitGTR.rds"))
 
 # 11.1 Phyloseq object ----
 
-# [CHANGED] Read the sample metadata; the first column provides the row names (sample names)
-# samdf <- read.csv(ruta_metadatos, header=TRUE, row.names = 1)
-# [CHANGED] Read the tab-delimited mothur metadata; the first column provides the row names (sample names)
+# [CHANGED] Read the tab-delimited mothur metadata (the original read.csv() expects commas and
+# produced a table with zero columns); the first column provides the row names (sample names)
 samdf <- read.delim(ruta_metadatos, header = TRUE, row.names = 1)
+
+# [ADDED] Day number of each sample, taken from its name (F3D0 ... F3D150); non-matching names (e.g., "Mock") give NA
+dia <- suppressWarnings(as.numeric(sub("^F3D", "", rownames(samdf))))
+
+# [ADDED] Grouping variable "periodo": Early (days 0-9 after weaning) vs Late (days 141-150).
+# It replaces the "material" variable of the original script, which does not exist in this dataset
+samdf$periodo <- factor(ifelse(dia <= 9, "Early", "Late"), levels = c("Early", "Late"))
+
+# [ADDED] Quick check: number of samples per period (NA would correspond to non-F3D names such as "Mock")
+table(samdf$periodo, useNA = "ifany")
 
 # Show the structure of the metadata
 str(samdf)
@@ -668,19 +677,19 @@ for (url in urls) {
   # End of the loop
 }
 
-# Rarefaction curves of psd4: richness as a function of the number of reads drawn (step of 100 reads), coloured by material
-p <- ggrare(psd4, step = 100, color = "material", se = TRUE)
+# [CHANGED] Rarefaction curves of psd4: richness as a function of the number of reads drawn (step of 100 reads),
+# coloured by period (Early/Late); "material" replaced by "periodo"
+p <- ggrare(psd4, step = 100, color = "periodo", se = TRUE)
 
-# Split the plot into one panel per material and print it
-(p <- p + facet_wrap(~material))
+# [CHANGED] Split the plot into one panel per period and print it
+(p <- p + facet_wrap(~periodo))
 
-# Same curves for psd1 (the object that still includes the sample below 1000 reads)
-p2<-ggrare(psd1, step = 100, color = "material", se = TRUE)
+# [CHANGED] Same curves for psd1 (the object before the removal of samples with <= 1000 reads)
+p2<-ggrare(psd1, step = 100, color = "periodo", se = TRUE)
 
 # [ADDED] Save both rarefaction plots
 guardar_fig(p, "13_rarefaccion_psd4")
 guardar_fig(p2, "13_rarefaccion_psd1")
-
 
 #####################
 # 14. USEFUL TABLES #
