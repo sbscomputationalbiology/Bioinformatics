@@ -450,7 +450,9 @@ saveRDS(fitGTR, file.path(dir_objetos, "fitGTR.rds"))
 # 11.1 Phyloseq object ----
 
 # [CHANGED] Read the sample metadata; the first column provides the row names (sample names)
-samdf <- read.csv(ruta_metadatos, header=TRUE, row.names = 1)
+# samdf <- read.csv(ruta_metadatos, header=TRUE, row.names = 1)
+# [CHANGED] Read the tab-delimited mothur metadata; the first column provides the row names (sample names)
+samdf <- read.delim(ruta_metadatos, header = TRUE, row.names = 1)
 
 # Show the structure of the metadata
 str(samdf)
