@@ -29,3 +29,4 @@ gert::git_branch()
 
 usethis::git_default_branch_configure()   # renombra master a main si hace falta
 usethis::use_github()
+
