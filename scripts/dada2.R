@@ -52,10 +52,10 @@ dir_objetos <- file.path(ruta_datos, "objetos_rds")
 ruta_metadatos <- file.path(ruta_raw, "metadata", "mouse.dpw.metadata")
 
 # [CHANGED] SILVA v132 training set for genus-level classification, expected in the "fasta" sub-folder
-ruta_silva_train <- file.path(ruta_raw, "fasta", "silva_nr_v132_train_set.fa.gz")
+ruta_silva_train <- file.path(ruta_raw, "database", "silva", "silva_nr_v132_train_set.fa.gz")
 
 # [CHANGED] SILVA v132 file for exact species-level matching, expected in the "fasta" sub-folder
-ruta_silva_especies <- file.path(ruta_raw, "fasta", "silva_species_assignment_v132.fa.gz")
+ruta_silva_especies <- file.path(ruta_raw, "database", "silva","silva_species_assignment_v132.fa.gz")
 
 # [ADDED] Vector with every folder that must exist before the analysis starts
 carpetas <- c(dir_figuras, dir_tablas, dir_filogenia, dir_objetos)
@@ -150,23 +150,33 @@ if (length(missing_pkgs) > 0) {
 # Fix the random seed so that stochastic steps (e.g., tree optimisation) are reproducible
 set.seed(2026)
 
-
 # 0.3 Loading the sequence files ----
 
-# Forward reads: file names containing "_1.fastq", sorted alphabetically (so pairs stay aligned)
-SecSentido <- sort(list.files(ruta, pattern="_1.fastq"))
+# Forward reads: file names containing "_R1_001.fastq", sorted alphabetically (so pairs stay aligned)
+SecSentido       <- sort(list.files(ruta, pattern = "_R1_001.fastq"))
 
-# Reverse reads: file names containing "_2.fastq", sorted alphabetically
-SecContraSentido <- sort(list.files(ruta, pattern="_2.fastq"))
+# Reverse reads: file names containing "_R2_001.fastq", sorted alphabetically
+SecContraSentido <- sort(list.files(ruta, pattern = "_R2_001.fastq"))
 
 # Sample names: split each forward file name at "_" and keep the first piece
-NombresMuestras <- sapply(strsplit(SecSentido, "_"), `[`, 1)
+NombresMuestras  <- sapply(strsplit(SecSentido, "_"), `[`, 1)
 
 # Full path of each forward file (avoids ambiguity about where the files are)
-SecSentido <- file.path(ruta, SecSentido)
+SecSentido       <- file.path(ruta, SecSentido)
 
 # Full path of each reverse file
 SecContraSentido <- file.path(ruta, SecContraSentido)
+
+# Safeguard: stop here with a clear message if the folder is wrong, nothing matched,
+# the forward/reverse files are not paired, or a path does not point to a real file
+stopifnot(dir.exists(ruta),
+          length(SecSentido) > 0,
+          length(SecSentido) == length(SecContraSentido),
+          all(file.exists(SecSentido), file.exists(SecContraSentido)))
+
+# Quick look at what was found (expected: "F3D0" "F3D1" "F3D141" "F3D142" "F3D143" "F3D144")
+head(NombresMuestras)
+head(SecSentido, 1)
 
 
 ###############################################
