@@ -99,16 +99,21 @@ if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
 cran_packages <- c(
   "tidyverse", "devtools", "knitr", "qtl", "bookdown", "gridExtra",
   "xtable", "kableExtra", "remotes", "viridis", "dendextend",
-  "ggpubr", "phangorn"
+  "ggpubr", "phangorn",
+  "vegan"                                  # [ADDED] vegdist() in section 17
 )
 
 # Bioconductor (se instalan con el prefijo "bioc::")
 bioc_packages <- c(
-  "phyloseq", "dada2", "DECIPHER", "DESeq2", "genefilter", "philr"
+  "phyloseq", "dada2", "DECIPHER", "DESeq2", "genefilter", "philr",
+  "microbiome",                            # [ADDED] summarize_phyloseq(), alpha(), richness(), dominance(), rarity()
+  "ComplexHeatmap"                         # [ADDED] required by microViz::comp_heatmap()
 )
 
 # GitHub (usuario/repo)
-git_packages <- c("twbattaglia/btools", "gmteunisse/fantaxtic")
+git_packages <- c("twbattaglia/btools", "gmteunisse/fantaxtic",
+                  "microsud/microbiomeutilities",   # [ADDED] boxplot_alpha() in section 16.4
+                  "david-barnett/microViz")         # [ADDED] comp_barplot(), comp_heatmap() in section 16.2
 
 # Nombres de todos los paquetes tal como se cargan con library()
 pkgs <- c(cran_packages, bioc_packages, basename(git_packages))
@@ -817,20 +822,20 @@ saveRDS(psd4r.filtrado, file.path(dir_objetos, "psd4r_filtrado.rds"))
 #   scale_color_manual(values = c("#a6cee3", "#b2df8a", "#fdbf6f")) +
 #   scale_fill_manual(values = c("#a6cee3", "#b2df8a", "#fdbf6f"))
 
-# [CHANGED] Default richness plot (all phyloseq measures) by material; the plot is kept in an object
-p_rich1 <- plot_richness(psd4, x="material")
+# [CHANGED] Default richness plot (all phyloseq measures) by period (Early/Late); the plot is kept in an object
+p_rich1 <- plot_richness(psd4, x="periodo")
 
 # Display it
 p_rich1
 
-# [CHANGED] Observed richness, Chao1 and Shannon, coloured by material; the plot is kept in an object
-p_rich2 <- plot_richness(psd4, color = "material", measures  = c("Observed", "Chao1", "Shannon"))
+# [CHANGED] Observed richness, Chao1 and Shannon, coloured by period; the plot is kept in an object
+p_rich2 <- plot_richness(psd4, color = "periodo", measures  = c("Observed", "Chao1", "Shannon"))
 
 # Display it
 p_rich2
 
-# Same three measures with the material on the x axis and as colour
-p = plot_richness(psd4, x="material", color="material", measures=c("Observed","Chao1", "Shannon"))
+# [CHANGED] Same three measures with the period on the x axis and as colour
+p = plot_richness(psd4, x="periodo", color="periodo", measures=c("Observed","Chao1", "Shannon"))
 
 # [CHANGED] Enlarge and soften the points; the result is kept in an object
 p_rich3 <- p + geom_point(size=5, alpha=0.7)
@@ -841,7 +846,7 @@ p_rich3
 # [ADDED] Save the three richness plots
 guardar_fig(p_rich1, "16_riqueza_todas_medidas")
 guardar_fig(p_rich2, "16_riqueza_observada_chao1_shannon")
-guardar_fig(p_rich3, "16_riqueza_puntos_por_material")
+guardar_fig(p_rich3, "16_riqueza_puntos_por_periodo")
 
 # 16.2 Taxonomic composition plots (microViz) ----
 # In the original these plots sit inside the alpha-diversity block; they describe composition.
@@ -851,11 +856,10 @@ guardar_fig(p_rich3, "16_riqueza_puntos_por_material")
 # Load microViz (comp_barplot, tax_transform, comp_heatmap)
 library(microViz)
 
-# [CHANGED] Bar plot of the composition at Phylum level, labelled by material, with horizontal bars (more readable)
+# [CHANGED] Bar plot of the composition at Phylum level, labelled by sample name (default), with horizontal bars (more readable)
 p_comp <- psd4 %>%
-  comp_barplot(tax_level = "Phylum",   # taxonomic rank to display
-               label = "material") +   # sample label shown on the axis
-  coord_flip()                         # horizontal bars
+  comp_barplot(tax_level = "Phylum") +   # taxonomic rank to display
+  coord_flip()                           # horizontal bars
 
 # Display it
 p_comp
@@ -965,15 +969,15 @@ write.csv(tab4, file.path(dir_tablas, "alfa_rareza.csv"))
 # [ADDED] boxplot_alpha() is provided by the microbiomeutilities package (load it if it is installed)
 require(microbiomeutilities)
 
-# Box plot of the Shannon index by material, with one fill colour per material
+# [CHANGED] Box plot of the Shannon index by period, with one fill colour per period
 p.shannon <- boxplot_alpha(psd4,
-                           index = "shannon",                                           # diversity index to plot
-                           x_var = "material",                                          # grouping variable
-                           fill.colors = c(Suelo="cyan4", tejidoVegetal="deeppink4"))   # soil and plant tissue colours
+                           index = "shannon",                                    # diversity index to plot
+                           x_var = "periodo",                                    # grouping variable
+                           fill.colors = c(Early="cyan4", Late="deeppink4"))     # one colour per period
 
 # Apply a minimal theme and larger text to the plot
 p.shannon <- p.shannon + theme_minimal() +
-  labs(x="Material", y="Shannon diversity") +    # axis titles
+  labs(x="Period", y="Shannon diversity") +    # axis titles
   theme(axis.text = element_text(size=12),       # axis tick labels
         axis.title = element_text(size=16),      # axis titles
         legend.text = element_text(size=12),     # legend labels
