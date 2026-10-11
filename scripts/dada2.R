@@ -91,17 +91,61 @@ registrar_paso <- function(paso, objeto) {
 
 # 0.2 Packages and random seed ----
 
-# Packages installed from CRAN (general data handling, tables, plots)
-cran_packages <- c( "tidyverse", "devtools", "knitr", "qtl", "bookdown", "grid", "gridExtra", "xtable", "kableExtra", "remotes", "viridis", "dendextend")
+# Ejecutar desde la raíz del proyecto, con renv activado
+if (!requireNamespace("renv", quietly = TRUE)) install.packages("renv")
+# renv::init()   # solo si el proyecto todavía no usa renv
 
-# Packages installed from Bioconductor (sequence analysis and microbiome statistics)
-bioc_packages <- c("phyloseq", "dada2", "DECIPHER", "phangorn", "ggpubr", "DESeq2", "genefilter", "philr")
+# CRAN
+cran_packages <- c(
+  "tidyverse", "devtools", "knitr", "qtl", "bookdown", "gridExtra",
+  "xtable", "kableExtra", "remotes", "viridis", "dendextend",
+  "ggpubr", "phangorn"
+)
 
-# Packages installed from GitHub (btools provides estimate_pd(); fantaxtic provides taxonomic bar plots)
-git_packages <- c("btools", "fantaxtic")
+# Bioconductor (se instalan con el prefijo "bioc::")
+bioc_packages <- c(
+  "phyloseq", "dada2", "DECIPHER", "DESeq2", "genefilter", "philr"
+)
 
-# Load every package; "require" returns TRUE/FALSE, so a FALSE flags a package that is not installed
-sapply(c(cran_packages, bioc_packages, git_packages), require, character.only = TRUE)
+# GitHub (usuario/repo)
+git_packages <- c("twbattaglia/btools", "gmteunisse/fantaxtic")
+
+# Nombres de todos los paquetes tal como se cargan con library()
+pkgs <- c(cran_packages, bioc_packages, basename(git_packages))
+
+# Paquetes que faltan en la biblioteca del proyecto
+missing_pkgs <- setdiff(pkgs, rownames(installed.packages()))
+
+if (length(missing_pkgs) > 0) {
+  
+  # 1) INSTALACIÓN: solo lo que falta (renv configura BiocManager y repos)
+  to_install <- c(
+    intersect(cran_packages, missing_pkgs),
+    paste0("bioc::", intersect(bioc_packages, missing_pkgs)),
+    git_packages[basename(git_packages) %in% missing_pkgs]
+  )
+  renv::install(to_install)
+  
+  # La sesión queda apuntando a la carpeta temporal de renv (.renv-staging),
+  # así que hay que reiniciar R antes de cargar nada.
+  message(
+    "\nInstalación terminada. Reinicia R (Ctrl+Shift+F10 en RStudio) ",
+    "y vuelve a ejecutar este script para cargar los paquetes y guardar el renv.lock."
+  )
+  
+} else {
+  
+  # 2) CARGA: todos los paquetes; FALSE indica uno que no se pudo cargar
+  loaded <- sapply(pkgs, require, character.only = TRUE)
+  
+  if (all(loaded)) {
+    # 3) Guardar versiones en renv.lock solo si todo cargó bien
+    renv::snapshot(type = "all", prompt = FALSE)
+  } else {
+    warning("No se pudieron cargar: ", paste(names(loaded)[!loaded], collapse = ", "),
+            "\nNo se actualizó renv.lock.")
+  }
+}
 
 # Fix the random seed so that stochastic steps (e.g., tree optimisation) are reproducible
 set.seed(2026)

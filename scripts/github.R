@@ -22,6 +22,7 @@ gert::git_add(".")
 gert::git_commit("Initial commit")
 
 gert::git_commit("CPB-BIO-DAD-preprocessing-v1")
+gert::git_commit("CPB-BIO-DAD-preprocessing-v2")
 
 usethis::use_git_config(user.name = "Tu Nombre", user.email = "tu@email.com")
 
